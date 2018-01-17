@@ -98,6 +98,49 @@ objects:
     kind: Role
     name: apbtool-push
     apiGroup: rbac.authorization.k8s.io
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRoleBinding
+  metadata:
+    name: apbtool-push-image-builder
+  subjects:
+  - kind: User
+    name: ${USER}
+  roleRef:
+    kind: ClusterRole
+    name: system:image-builder
+    apiGroup: rbac.authorization.k8s.io
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRoleBinding
+  metadata:
+    name: apbtool-push-registry
+  subjects:
+  - kind: User
+    name: ${USER}
+  roleRef:
+    kind: ClusterRole
+    name: system:registry
+    apiGroup: rbac.authorization.k8s.io
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: registry-access
+    namespace: ${REGISTRY_NAMESPACE}
+  spec:
+    to:
+      kind: Service
+      name: docker-registry
+      weight: 100
+    port:
+      targetPort: 5000-tcp
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Allow
+  status:
+    ingress:
+      - routerName: router
+        conditions:
+          - type: Admitted
+            status: 'True'
 parameters:
 - displayname: User
   description: The name of the User that should be permissioned for apb tool access
