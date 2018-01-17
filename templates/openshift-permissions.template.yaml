@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: apbtools-permission
+objects:
+################################################################################
+# apb must be able to view the ansible-service-broker project
+################################################################################
+- apiVersion: authorization.openshift.io/v1
+  kind: RoleBinding
+  metadata:
+    name: apbtool-view
+    namespace: ansible-service-broker
+  subjects:
+  - kind: User
+    name: ${USER}
+  roleRef:
+    kind: Role
+    name: view
+################################################################################
+# relist support
+################################################################################
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: Role
+  metadata:
+    name: apbtool-get-secrets
+    namespace: ansible-service-broker
+  rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: RoleBinding
+  metadata:
+    name: apbtool-get-secrets
+    namespace: ansible-service-broker
+  subjects:
+  - kind: User
+    name: ${USER}
+  roleRef:
+    kind: Role
+    name: apbtool-get-secrets
+    apiGroup: rbac.authorization.k8s.io
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRole
+  metadata:
+    name: apbtool-relist
+  rules:
+  - apiGroups: ["servicecatalog.k8s.io"]
+    resources: ["clusterservicebroker"]
+    verbs: ["get", "patch"]
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRoleBinding
+  metadata:
+    name: apbtool-relist
+  subjects:
+  - kind: User
+    name: developer
+  roleRef:
+    kind: ClusterRole
+    name: apbtool-relist
+    apiGroup: rbac.authorization.k8s.io
+parameters:
+- displayname: User
+  description: The name of the User that should be permissioned for apb tool access
+  name: USER
+  value: developer
