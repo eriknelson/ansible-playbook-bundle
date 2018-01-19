@@ -74,6 +74,43 @@ objects:
     kind: ClusterRole
     name: apbtool-relist
     apiGroup: rbac.authorization.k8s.io
+################################################################################
+# apb push requires the prereqs for accessing the registry directly, see:
+# https://docs.openshift.com/enterprise/3.2/install_config/install/docker_registry.html#access-user-prerequisites
+################################################################################
+- apiVersion: authorization.openshift.io/v1
+  kind: RoleBinding
+  metadata:
+    name: apbtool-openshift-admin
+    namespace: ${GLOBAL_IMAGE_PROJECT}
+  subjects:
+  - kind: User
+    name: ${USER}
+  roleRef:
+    kind: Role
+    name: admin
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRoleBinding
+  metadata:
+    name: apbtool-system-registry
+  subjects:
+  - kind: User
+    name: ${USER}
+  roleRef:
+    kind: ClusterRole
+    name: system:registry
+    apiGroup: rbac.authorization.k8s.io
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: ClusterRoleBinding
+  metadata:
+    name: apbtool-system-image-builder
+  subjects:
+  - kind: User
+    name: ${USER}
+  roleRef:
+    kind: ClusterRole
+    name: system:image-builder
+    apiGroup: rbac.authorization.k8s.io
 parameters:
 - displayname: User
   description: The name of the User that should be permissioned for apb tool access
@@ -83,7 +120,7 @@ parameters:
   description: The Ansible Broker's namespace
   name: BROKER_NAMESPACE
   value: ansible-service-broker
-- displayname: Docker Registry Namespace
-  description: Openshift's docker registry namespace
-  name: REGISTRY_NAMESPACE
-  value: default
+- displayname: Global Image Project
+  description: Global Image Project
+  name: GLOBAL_IMAGE_PROJECT
+  value: openshift
