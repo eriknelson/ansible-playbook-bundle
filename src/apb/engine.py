@@ -782,6 +782,7 @@ def broker_request(broker, service_route, method, **kwargs):
 
 
 def cmdrun_list(**kwargs):
+    import pdb; pdb.set_trace()
     response = broker_request(kwargs['broker'], "/v2/catalog", "get",
                               verify=kwargs["verify"],
                               basic_auth_username=kwargs.get("basic_auth_username"),

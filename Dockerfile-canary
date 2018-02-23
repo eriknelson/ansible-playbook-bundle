@@ -5,7 +5,8 @@ RUN yum -y install epel-release centos-release-openshift-origin \
  && yum clean all
 
 RUN virtualenv /opt/apb
-RUN git clone https://github.com/fusor/ansible-playbook-bundle
+RUN git clone https://github.com/eriknelson/ansible-playbook-bundle && \
+  cd ansible-playbook-bundle && git checkout debug
 RUN source /opt/apb/bin/activate \
  && pip install -U pip setuptools
 RUN source /opt/apb/bin/activate \
