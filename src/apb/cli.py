@@ -3,6 +3,8 @@ import os
 import sys
 import argparse
 
+from openshift import client as openshift_client, config as openshift_config
+
 import apb.engine
 
 SKIP_OPTIONS = ['provision', 'deprovision', 'bind', 'unbind', 'roles']
@@ -506,49 +508,66 @@ def subcmd_help_parser(subcmd):
     return
 
 
+# def main():
+    # """ main """
+    # parser = argparse.ArgumentParser(
+        # description=u'APB tooling for '
+        # u'assisting in building and packaging APBs.'
+    # )
+
+    # parser.add_argument(
+        # '--debug',
+        # action='store_true',
+        # dest='debug',
+        # help=u'Enable debug output',
+        # default=False
+    # )
+
+    # # TODO: Modify project to accept relative paths
+    # parser.add_argument(
+        # '--project',
+        # '-p',
+        # action='store',
+        # dest='base_path',
+        # help=u'Specify a path to your project. Defaults to CWD.',
+        # default=os.getcwd()
+    # )
+
+    # subparsers = parser.add_subparsers(title='subcommand', dest='subcommand')
+    # subparsers.required = True
+
+    # for subcommand in AVAILABLE_COMMANDS:
+        # subparser = subparsers.add_parser(
+            # subcommand, help=AVAILABLE_COMMANDS[subcommand]
+        # )
+        # globals()['subcmd_%s_parser' % subcommand](subparser)
+
+    # args = parser.parse_args()
+
+    # if args.subcommand == 'help':
+        # parser.print_help()
+        # sys.exit(0)
+
+    # try:
+        # getattr(apb.engine,
+                # u'cmdrun_{}'.format(args.subcommand))(**vars(args))
+    # except Exception as e:
+        # print("Exception occurred! %s" % e)
+        # sys.exit(1)
+
 def main():
-    """ main """
-    parser = argparse.ArgumentParser(
-        description=u'APB tooling for '
-        u'assisting in building and packaging APBs.'
-    )
+    print("Trying to list ")
+    openshift_config.load_kube_config()
+    oapi = openshift_client.OapiApi()
+    route_list = oapi.list_namespaced_route('ansible-service-broker')
 
-    parser.add_argument(
-        '--debug',
-        action='store_true',
-        dest='debug',
-        help=u'Enable debug output',
-        default=False
-    )
-
-    # TODO: Modify project to accept relative paths
-    parser.add_argument(
-        '--project',
-        '-p',
-        action='store',
-        dest='base_path',
-        help=u'Specify a path to your project. Defaults to CWD.',
-        default=os.getcwd()
-    )
-
-    subparsers = parser.add_subparsers(title='subcommand', dest='subcommand')
-    subparsers.required = True
-
-    for subcommand in AVAILABLE_COMMANDS:
-        subparser = subparsers.add_parser(
-            subcommand, help=AVAILABLE_COMMANDS[subcommand]
-        )
-        globals()['subcmd_%s_parser' % subcommand](subparser)
-
-    args = parser.parse_args()
-
-    if args.subcommand == 'help':
-        parser.print_help()
-        sys.exit(0)
-
-    try:
-        getattr(apb.engine,
-                u'cmdrun_{}'.format(args.subcommand))(**vars(args))
-    except Exception as e:
-        print("Exception occurred! %s" % e)
-        sys.exit(1)
+    if route_list.items == []:
+        print("Didn't find OpenShift Ansible Broker route in namespace: ansible-service-broker.\
+                Trying openshift-ansible-service-broker")
+        route_list = oapi.list_namespaced_route('openshift-ansible-service-broker')
+        if route_list.items == []:
+            print("Still failed to find a route to OpenShift Ansible Broker.")
+            return None
+    else:
+        print("Got some routes:")
+        print(route_list.items)
